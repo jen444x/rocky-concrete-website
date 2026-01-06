@@ -802,46 +802,178 @@ const breadcrumbs = [
     }
   });
 
-  // Touch swipe gestures for mobile navigation + drag-to-dismiss
+  // Touch gestures: swipe navigation, drag-to-dismiss, pinch-to-zoom
   let touchStartX = 0;
   let touchStartY = 0;
   let touchCurrentX = 0;
   let touchCurrentY = 0;
   let isSwiping = false;
-  let swipeDirection: 'horizontal' | 'vertical' | null = null; // Lock direction once determined
-  const SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
-  const SWIPE_VELOCITY_THRESHOLD = 0.3; // Pixels per millisecond
-  const DISMISS_THRESHOLD = 0.25; // 25% of screen height to dismiss
-  const DISMISS_VELOCITY_THRESHOLD = 0.5; // Fast flick threshold
+  let swipeDirection: 'horizontal' | 'vertical' | null = null;
+  const SWIPE_THRESHOLD = 50;
+  const SWIPE_VELOCITY_THRESHOLD = 0.3;
+  const DISMISS_THRESHOLD = 0.25;
+  const DISMISS_VELOCITY_THRESHOLD = 0.5;
   let touchStartTime = 0;
+
+  // Pinch-to-zoom state
+  let currentScale = 1;
+  let targetScale = 1;
+  let pinchStartDistance = 0;
+  let isPinching = false;
+  let panX = 0;
+  let panY = 0;
+  let panStartX = 0;
+  let panStartY = 0;
+  let isPanning = false;
+  const MIN_SCALE = 1;
+  const MAX_SCALE = 3;
+
+  // Double-tap detection
+  let lastTapTime = 0;
+  const DOUBLE_TAP_DELAY = 300;
+
+  // Get distance between two touch points
+  function getTouchDistance(touches: TouchList): number {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  // Get center point between two touches
+  function getTouchCenter(touches: TouchList): { x: number; y: number } {
+    return {
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2
+    };
+  }
+
+  // Apply zoom transform to image
+  function applyZoomTransform() {
+    if (!lightboxImage) return;
+    lightboxImage.style.transform = `scale(${currentScale}) translate(${panX / currentScale}px, ${panY / currentScale}px)`;
+  }
+
+  // Reset zoom state
+  function resetZoom(animate = true) {
+    currentScale = 1;
+    targetScale = 1;
+    panX = 0;
+    panY = 0;
+    if (lightboxImage) {
+      if (animate) {
+        lightboxImage.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+        setTimeout(() => {
+          if (lightboxImage) lightboxImage.style.transition = '';
+        }, 300);
+      }
+      lightboxImage.style.transform = '';
+    }
+  }
 
   function handleTouchStart(e: TouchEvent) {
     if (!isLightboxOpen) return;
 
-    // Only track single finger touches
-    if (e.touches.length !== 1) return;
+    const now = Date.now();
 
-    const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-    touchCurrentX = touch.clientX;
-    touchCurrentY = touch.clientY;
-    touchStartTime = Date.now();
-    isSwiping = true;
-    swipeDirection = null; // Reset direction lock
+    // PINCH: Two fingers
+    if (e.touches.length === 2) {
+      isPinching = true;
+      isSwiping = false;
+      pinchStartDistance = getTouchDistance(e.touches);
+      targetScale = currentScale;
 
-    // Remove transition during swipe for responsive feel
-    if (lightboxMedia) {
-      lightboxMedia.style.transition = 'none';
+      if (lightboxImage) {
+        lightboxImage.style.transition = 'none';
+      }
+      return;
     }
-    if (lightboxBackdrop) {
-      lightboxBackdrop.style.transition = 'none';
+
+    // SINGLE FINGER
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+
+      // Double-tap detection
+      if (now - lastTapTime < DOUBLE_TAP_DELAY) {
+        // Double tap! Toggle zoom
+        if (currentScale > 1) {
+          resetZoom(true);
+        } else {
+          // Zoom to 2x centered on tap point
+          currentScale = 2;
+          panX = 0;
+          panY = 0;
+          if (lightboxImage) {
+            lightboxImage.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+            applyZoomTransform();
+            setTimeout(() => {
+              if (lightboxImage) lightboxImage.style.transition = '';
+            }, 300);
+          }
+        }
+        lastTapTime = 0; // Reset to prevent triple-tap
+        return;
+      }
+      lastTapTime = now;
+
+      // If zoomed in, start panning instead of swiping
+      if (currentScale > 1) {
+        isPanning = true;
+        isSwiping = false;
+        panStartX = touch.clientX - panX;
+        panStartY = touch.clientY - panY;
+        if (lightboxImage) {
+          lightboxImage.style.transition = 'none';
+        }
+        return;
+      }
+
+      // Normal swipe/dismiss behavior
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchCurrentX = touch.clientX;
+      touchCurrentY = touch.clientY;
+      touchStartTime = now;
+      isSwiping = true;
+      swipeDirection = null;
+
+      if (lightboxMedia) {
+        lightboxMedia.style.transition = 'none';
+      }
+      if (lightboxBackdrop) {
+        lightboxBackdrop.style.transition = 'none';
+      }
     }
   }
 
   function handleTouchMove(e: TouchEvent) {
-    if (!isLightboxOpen || !isSwiping) return;
-    if (e.touches.length !== 1) return;
+    if (!isLightboxOpen) return;
+
+    // PINCH: Zooming
+    if (isPinching && e.touches.length === 2) {
+      const currentDistance = getTouchDistance(e.touches);
+      const scaleChange = currentDistance / pinchStartDistance;
+      currentScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, targetScale * scaleChange));
+      applyZoomTransform();
+      return;
+    }
+
+    // PAN: When zoomed in
+    if (isPanning && e.touches.length === 1) {
+      const touch = e.touches[0];
+      panX = touch.clientX - panStartX;
+      panY = touch.clientY - panStartY;
+
+      // Limit panning to image bounds (approximate)
+      const maxPan = (currentScale - 1) * 150;
+      panX = Math.min(maxPan, Math.max(-maxPan, panX));
+      panY = Math.min(maxPan, Math.max(-maxPan, panY));
+
+      applyZoomTransform();
+      return;
+    }
+
+    // SWIPE: Normal navigation/dismiss
+    if (!isSwiping || e.touches.length !== 1) return;
 
     const touch = e.touches[0];
     touchCurrentX = touch.clientX;
@@ -850,7 +982,7 @@ const breadcrumbs = [
     const deltaX = touchCurrentX - touchStartX;
     const deltaY = touchCurrentY - touchStartY;
 
-    // Determine swipe direction if not yet locked (after 10px movement)
+    // Determine swipe direction if not yet locked
     if (!swipeDirection && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
       swipeDirection = Math.abs(deltaY) > Math.abs(deltaX) ? 'vertical' : 'horizontal';
     }
@@ -858,16 +990,10 @@ const breadcrumbs = [
     // VERTICAL: Drag-to-dismiss (only downward)
     if (swipeDirection === 'vertical' && deltaY > 0) {
       const screenHeight = window.innerHeight;
-      const progress = Math.min(deltaY / screenHeight, 1); // 0 to 1
-
-      // Resistance: starts 1:1, increases resistance as you drag further
+      const progress = Math.min(deltaY / screenHeight, 1);
       const resistance = 1 - (progress * 0.4);
       const translateY = deltaY * resistance;
-
-      // Scale: shrinks slightly as you drag (1 → 0.85)
       const scale = Math.max(0.85, 1 - (progress * 0.15));
-
-      // Backdrop opacity: fades as you drag
       const backdropOpacity = Math.max(0.3, 1 - progress);
 
       if (lightboxMedia) {
@@ -880,12 +1006,9 @@ const breadcrumbs = [
     // HORIZONTAL: Navigate between images
     else if (swipeDirection === 'horizontal') {
       if (lightboxMedia && Math.abs(deltaX) > 10) {
-        // Add resistance effect
         const resistance = 0.4;
         const translateX = deltaX * resistance;
         lightboxMedia.style.transform = `translateX(${translateX}px)`;
-
-        // Slight opacity fade based on swipe distance
         const opacity = Math.max(0.5, 1 - Math.abs(deltaX) / 500);
         lightboxImage.style.opacity = String(opacity);
       }
@@ -893,7 +1016,26 @@ const breadcrumbs = [
   }
 
   function handleTouchEnd(e: TouchEvent) {
-    if (!isLightboxOpen || !isSwiping) return;
+    if (!isLightboxOpen) return;
+
+    // PINCH END
+    if (isPinching) {
+      isPinching = false;
+      // Snap to 1x if close
+      if (currentScale < 1.1) {
+        resetZoom(true);
+      }
+      return;
+    }
+
+    // PAN END
+    if (isPanning) {
+      isPanning = false;
+      return;
+    }
+
+    // SWIPE END
+    if (!isSwiping) return;
     isSwiping = false;
 
     const deltaX = touchCurrentX - touchStartX;
@@ -905,12 +1047,9 @@ const breadcrumbs = [
       const screenHeight = window.innerHeight;
       const progress = deltaY / screenHeight;
       const velocity = deltaY / deltaTime;
-
-      // Dismiss if dragged past threshold OR fast flick
       const shouldDismiss = progress > DISMISS_THRESHOLD || velocity > DISMISS_VELOCITY_THRESHOLD;
 
       if (shouldDismiss) {
-        // Animate out and close
         if (lightboxMedia) {
           lightboxMedia.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out';
           lightboxMedia.style.transform = `translateY(${screenHeight}px) scale(0.8)`;
@@ -920,10 +1059,7 @@ const breadcrumbs = [
           lightboxBackdrop.style.transition = 'opacity 0.3s ease-out';
           lightboxBackdrop.style.opacity = '0';
         }
-
-        // Close after animation
         setTimeout(() => {
-          // Reset styles before closing
           if (lightboxMedia) {
             lightboxMedia.style.transition = '';
             lightboxMedia.style.transform = '';
@@ -933,10 +1069,10 @@ const breadcrumbs = [
             lightboxBackdrop.style.transition = '';
             lightboxBackdrop.style.opacity = '';
           }
+          resetZoom(false);
           closeLightbox();
         }, 300);
       } else {
-        // Snap back with spring animation
         if (lightboxMedia) {
           lightboxMedia.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
           lightboxMedia.style.transform = '';
@@ -953,22 +1089,19 @@ const breadcrumbs = [
     if (swipeDirection === 'horizontal') {
       const velocity = Math.abs(deltaX) / deltaTime;
 
-      // Reset transforms with smooth transition
       if (lightboxMedia) {
         lightboxMedia.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
         lightboxMedia.style.transform = '';
       }
       lightboxImage.style.opacity = '';
 
-      // Determine if swipe was significant enough
       const isSwipe = Math.abs(deltaX) > SWIPE_THRESHOLD || velocity > SWIPE_VELOCITY_THRESHOLD;
 
       if (isSwipe) {
+        resetZoom(false); // Reset zoom when navigating
         if (deltaX > 0) {
-          // Swiped right → previous image
           prevImage();
         } else {
-          // Swiped left → next image
           nextImage();
         }
       }
