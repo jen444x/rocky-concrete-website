@@ -391,88 +391,85 @@ const breadcrumbs = [
     </div>
   </section>
 
-  <!-- Lightbox Modal -->
+  <!-- Premium Lightbox Modal -->
   <div
     id="lightbox"
     role="dialog"
     aria-modal="true"
     aria-label="Image gallery lightbox"
-    class="fixed inset-0 bg-black/95 z-[9999] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300"
+    class="lightbox fixed inset-0 z-[9999] hidden"
   >
-    <button
-      id="lightbox-close"
-      class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
-      aria-label="Close lightbox"
-    >
-      <svg
-        class="w-10 h-10"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M6 18L18 6M6 6l12 12"></path>
-      </svg>
-    </button>
+    <!-- Backdrop with blur animation -->
+    <div id="lightbox-backdrop" class="absolute inset-0 bg-black/95 transition-all duration-500"></div>
 
-    <button
-      id="lightbox-prev"
-      class="absolute left-4 text-white hover:text-gray-300 transition-colors z-10 bg-white/10 hover:bg-white/20 rounded-full p-3"
-      aria-label="Previous image"
-    >
-      <svg
-        class="w-8 h-8"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
+    <!-- Controls wrapper - will auto-hide after inactivity -->
+    <div id="lightbox-controls" class="lightbox-controls transition-opacity duration-300">
+      <!-- Close button -->
+      <button
+        id="lightbox-close"
+        class="absolute top-5 right-5 z-30 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transition-all duration-300 hover:scale-110"
+        aria-label="Close lightbox"
       >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M15 19l-7-7 7-7"></path>
-      </svg>
-    </button>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
 
-    <button
-      id="lightbox-next"
-      class="absolute right-4 text-white hover:text-gray-300 transition-colors z-10 bg-white/10 hover:bg-white/20 rounded-full p-3"
-      aria-label="Next image"
-    >
-      <svg
-        class="w-8 h-8"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
+      <!-- Navigation - Previous -->
+      <button
+        id="lightbox-prev"
+        class="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 md:p-4 transition-all duration-300 hover:scale-110"
+        aria-label="Previous image"
       >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 5l7 7-7 7"></path>
-      </svg>
-    </button>
+        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
 
-    <div
-      class="max-w-7xl max-h-[85dvh] w-full h-full flex items-center justify-center px-4"
-    >
-      <img
-        id="lightbox-image"
-        src=""
-        alt=""
-        class="max-w-full max-h-full object-contain opacity-0 scale-95 transition-all duration-300"
-      />
+      <!-- Navigation - Next -->
+      <button
+        id="lightbox-next"
+        class="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-3 md:p-4 transition-all duration-300 hover:scale-110"
+        aria-label="Next image"
+      >
+        <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+
+      <!-- Caption with gradient overlay -->
+      <div class="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/60 via-black/20 to-transparent pt-16 pb-6 pointer-events-none">
+        <div class="text-center px-6">
+          <p id="lightbox-caption" class="text-white text-base md:text-lg font-light tracking-wide mb-1"></p>
+          <p id="lightbox-counter" class="text-white/50 text-sm tracking-widest"></p>
+        </div>
+      </div>
     </div>
 
-    <div
-      class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white text-center"
-    >
-      <p id="lightbox-caption" class="text-lg font-light mb-2 text-slate-light">
-      </p>
-      <p id="lightbox-counter" class="text-sm text-slate-light"></p>
+    <!-- Main content area -->
+    <div id="lightbox-content" class="absolute inset-0 flex items-center justify-center z-10">
+      <!-- Loading spinner -->
+      <div id="lightbox-loader" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
+        <div class="w-12 h-12 border-2 border-white/20 border-t-bronze rounded-full animate-spin"></div>
+      </div>
+
+      <!-- Media wrapper -->
+      <div id="lightbox-media" class="relative flex items-center justify-center w-full h-full px-4 md:px-16">
+        <img
+          id="lightbox-image"
+          src=""
+          alt=""
+          class="lightbox-image max-w-full max-h-[85dvh] object-contain select-none opacity-0 transition-opacity duration-300"
+          draggable="false"
+        />
+      </div>
+    </div>
+
+    <!-- Thumbnail strip navigation (hidden by default, shown via JS) -->
+    <div id="lightbox-thumbs" class="absolute bottom-14 left-1/2 -translate-x-1/2 z-40 opacity-0 pointer-events-none transition-opacity duration-300">
+      <div id="lightbox-thumbs-inner" class="flex gap-1.5 px-3 py-2 bg-black/50 backdrop-blur-md rounded-full max-w-[85vw] overflow-x-auto scrollbar-hide">
+        <!-- Thumbnails populated by JS -->
+      </div>
     </div>
   </div>
 
@@ -503,8 +500,7 @@ const breadcrumbs = [
 
   // Constants
   const SCROLL_THRESHOLD_BACK_TO_TOP = 300;
-  const LIGHTBOX_TRANSITION_DELAY = 10;
-  const LIGHTBOX_CLOSE_DELAY = 300;
+  const LIGHTBOX_CLOSE_DELAY = 500; // Smooth luxurious close animation
 
   const backToTopBtn = document.getElementById("back-to-top");
 
@@ -534,9 +530,12 @@ const breadcrumbs = [
 
   // Lightbox functionality
   const lightbox = document.getElementById("lightbox");
-  const lightboxImage = document.getElementById(
-    "lightbox-image"
-  ) as HTMLImageElement;
+  const lightboxBackdrop = document.getElementById("lightbox-backdrop");
+  const lightboxControls = document.getElementById("lightbox-controls");
+  const lightboxContent = document.getElementById("lightbox-content");
+  const lightboxLoader = document.getElementById("lightbox-loader");
+  const lightboxMedia = document.getElementById("lightbox-media");
+  const lightboxImage = document.getElementById("lightbox-image") as HTMLImageElement;
   const lightboxCaption = document.getElementById("lightbox-caption");
   const lightboxCounter = document.getElementById("lightbox-counter");
   const lightboxClose = document.getElementById("lightbox-close");
@@ -546,6 +545,7 @@ const breadcrumbs = [
 
   let currentLightboxIndex = 0;
   let currentMuxPlayer: HTMLElement | null = null;
+  let isLightboxOpen = false;
 
   // Clean up any existing mux-player
   function cleanupVideoPlayer() {
@@ -558,6 +558,7 @@ const breadcrumbs = [
 
   function openLightbox(index: number) {
     currentLightboxIndex = index;
+    isLightboxOpen = true;
 
     const item = galleryItems[currentLightboxIndex];
     if (!item) return;
@@ -569,21 +570,26 @@ const breadcrumbs = [
     const playbackId = item.getAttribute("data-playback-id");
     const aspectRatio = item.getAttribute("data-aspect-ratio");
 
-    if (
-      !img ||
-      !lightbox ||
-      !lightboxImage ||
-      !lightboxCaption ||
-      !lightboxCounter
-    )
-      return;
+    if (!img || !lightbox || !lightboxImage || !lightboxCaption || !lightboxCounter || !lightboxMedia) return;
 
     // Clean up any previous video
     cleanupVideoPlayer();
 
+    // Show lightbox container
+    lightbox.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+
+    // Animate backdrop in
+    requestAnimationFrame(() => {
+      lightboxBackdrop?.classList.add("bg-black/95");
+      lightboxBackdrop?.classList.remove("bg-black/0");
+    });
+
     if (isVideo && playbackId) {
-      // VIDEO: Hide image, create mux-player as sibling with SAME styling
+      // VIDEO: Hide image, create mux-player
       lightboxImage.classList.add("hidden");
+      lightboxImage.classList.remove("opacity-100");
+      lightboxImage.classList.add("opacity-0");
 
       const muxPlayer = document.createElement("mux-player");
       muxPlayer.setAttribute("playback-id", playbackId);
@@ -604,73 +610,102 @@ const breadcrumbs = [
       muxPlayer.style.setProperty("--controls-hover-background", "rgba(26, 26, 26, 0.95)");
 
       // Set aspect ratio from Mux (format "16:9" -> "16 / 9")
-      // Also calculate max-width from viewport height for height-constrained layout
       let aspectRatioValue = 16 / 9; // default
       if (aspectRatio) {
         const cssAspectRatio = aspectRatio.replace(":", " / ");
         muxPlayer.style.aspectRatio = cssAspectRatio;
-
-        // Parse aspect ratio for calc (e.g., "16:9" -> 16/9 = 1.777)
         const [w, h] = aspectRatio.split(":").map(Number);
         if (w && h) aspectRatioValue = w / h;
       }
 
-      // CRITICAL: iOS Safari needs concrete width values (not "auto")
-      // Solution: Use width:100% + max-width derived from viewport height
-      // This creates a height-constrained layout with concrete values iOS understands
+      // iOS Safari needs concrete width values
       muxPlayer.style.width = "100%";
       muxPlayer.style.height = "auto";
       muxPlayer.style.maxHeight = "85dvh";
-      // Derive max-width from height: if max-height is 85dvh, max-width = 85dvh * aspectRatio
       muxPlayer.style.maxWidth = `calc(85dvh * ${aspectRatioValue})`;
       muxPlayer.style.setProperty("--media-object-fit", "contain");
+      muxPlayer.style.opacity = "0";
+      muxPlayer.style.transition = "opacity 0.4s ease-out";
 
-      // Insert as sibling right after the image (same parent, same level)
-      lightboxImage.insertAdjacentElement("afterend", muxPlayer);
+      // Insert into media wrapper
+      lightboxMedia.appendChild(muxPlayer);
       currentMuxPlayer = muxPlayer;
 
-      // Show player immediately - sizing is now concrete (no resize flash)
-      // Previous approach waited for loadedmetadata which doesn't fire reliably on iOS
-      muxPlayer.style.transition = "opacity 0.4s ease-out";
-      muxPlayer.style.opacity = "1";
+      // Fade in the player
+      requestAnimationFrame(() => {
+        muxPlayer.style.opacity = "1";
+      });
     } else {
-      // IMAGE: Show image
+      // IMAGE: Show with loading state
       lightboxImage.classList.remove("hidden");
-      lightboxImage.src = fullSrc || img.src;
-      lightboxImage.alt = img.alt;
+      lightboxImage.classList.remove("opacity-100");
+      lightboxImage.classList.add("opacity-0");
+
+      // Show loader
+      lightboxLoader?.classList.remove("opacity-0");
+      lightboxLoader?.classList.add("opacity-100");
+
+      // Load the full image
+      const fullImageSrc = fullSrc || img.src;
+
+      // Create a new image to preload
+      const preloadImg = new Image();
+      preloadImg.onload = () => {
+        // Image loaded - hide loader, show image
+        lightboxLoader?.classList.remove("opacity-100");
+        lightboxLoader?.classList.add("opacity-0");
+
+        lightboxImage.src = fullImageSrc;
+        lightboxImage.alt = img.alt;
+
+        // Fade in the image
+        requestAnimationFrame(() => {
+          lightboxImage.classList.remove("opacity-0");
+          lightboxImage.classList.add("opacity-100");
+        });
+      };
+      preloadImg.onerror = () => {
+        // Fallback if preload fails
+        lightboxLoader?.classList.remove("opacity-100");
+        lightboxLoader?.classList.add("opacity-0");
+        lightboxImage.src = fullImageSrc;
+        lightboxImage.alt = img.alt;
+        lightboxImage.classList.remove("opacity-0");
+        lightboxImage.classList.add("opacity-100");
+      };
+      preloadImg.src = fullImageSrc;
     }
 
     lightboxCaption.textContent = img.alt;
     lightboxCounter.textContent = `${currentLightboxIndex + 1} / ${galleryItems.length}`;
 
-    lightbox.classList.remove("hidden");
-    lightbox.classList.add("flex");
-    document.body.style.overflow = "hidden";
-
-    // Trigger fade-in animation
+    // Focus close button for accessibility
     setTimeout(() => {
-      lightbox.classList.remove("opacity-0");
-      lightbox.classList.add("opacity-100");
-      lightboxImage.classList.remove("opacity-0", "scale-95");
-      lightboxImage.classList.add("opacity-100", "scale-100");
       lightboxClose?.focus();
-    }, LIGHTBOX_TRANSITION_DELAY);
+    }, 100);
   }
 
   function closeLightbox() {
-    if (!lightbox || !lightboxImage) return;
+    if (!lightbox || !lightboxImage || !isLightboxOpen) return;
+    isLightboxOpen = false;
 
     // Clean up video player
     cleanupVideoPlayer();
 
-    lightbox.classList.remove("opacity-100");
-    lightbox.classList.add("opacity-0");
-    lightboxImage.classList.remove("opacity-100", "scale-100");
-    lightboxImage.classList.add("opacity-0", "scale-95");
+    // Fade out image
+    lightboxImage.classList.remove("opacity-100");
+    lightboxImage.classList.add("opacity-0");
+
+    // Fade out backdrop
+    lightboxBackdrop?.classList.remove("bg-black/95");
+    lightboxBackdrop?.classList.add("bg-black/0");
+
+    // Hide loader if visible
+    lightboxLoader?.classList.remove("opacity-100");
+    lightboxLoader?.classList.add("opacity-0");
 
     setTimeout(() => {
       lightbox.classList.add("hidden");
-      lightbox.classList.remove("flex");
       document.body.style.overflow = "";
     }, LIGHTBOX_CLOSE_DELAY);
   }
@@ -706,10 +741,12 @@ const breadcrumbs = [
     });
 
     // Video hover preview - smart preloading with Intersection Observer
+    // ONLY on devices that support hover (not touch devices)
     const isVideo = item.getAttribute("data-is-video") === "true";
     const animatedSrc = item.getAttribute("data-animated-src");
+    const canHover = window.matchMedia("(hover: hover)").matches;
 
-    if (isVideo && animatedSrc) {
+    if (isVideo && animatedSrc && canHover) {
       const img = item.querySelector("img") as HTMLImageElement;
       if (!img) return;
 
@@ -747,16 +784,18 @@ const breadcrumbs = [
   lightboxNext?.addEventListener("click", nextImage);
   lightboxPrev?.addEventListener("click", prevImage);
 
-  // Close on background click
-  lightbox?.addEventListener("click", (e) => {
-    if (e.target === lightbox) {
+  // Close on background click (backdrop or content area, but not the media itself)
+  lightboxBackdrop?.addEventListener("click", closeLightbox);
+  lightboxContent?.addEventListener("click", (e) => {
+    // Only close if clicking directly on content area, not on image/video
+    if (e.target === lightboxContent || e.target === lightboxMedia) {
       closeLightbox();
     }
   });
 
   // Keyboard navigation
   document.addEventListener("keydown", (e) => {
-    if (!lightbox?.classList.contains("hidden")) {
+    if (isLightboxOpen) {
       if (e.key === "Escape") closeLightbox();
       if (e.key === "ArrowRight") nextImage();
       if (e.key === "ArrowLeft") prevImage();
