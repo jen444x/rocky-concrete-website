@@ -68,7 +68,7 @@ const allGalleryItems = await sanityClient.fetch(
     alt,
     category,
     subcategory,
-    finishType,
+    finishTypes,
     featured,
     isVideo,
     image,
@@ -133,7 +133,7 @@ const galleryItems = allGalleryItems.map((item: any, index: number) => {
     title: item.title,
     category: item.category,
     subcategory: item.subcategory || null,
-    finishType: item.finishType || null,
+    finishTypes: item.finishTypes || [],
     featured: item.featured || false,
     originalIndex: index,
     isVideo,
@@ -210,7 +210,7 @@ const breadcrumbs = [
           <div class="flex justify-end gap-4 md:gap-6">
             {finishTypes.map((finish, index) => (
               <button
-                class={`finish-filter-btn group relative whitespace-nowrap text-sm tracking-wide transition-colors duration-300 pb-2 ${
+                class={`finish-filter-btn cursor-pointer group relative whitespace-nowrap text-sm tracking-wide transition-colors duration-300 pb-2 ${
                   index === 0
                     ? 'text-charcoal font-medium'
                     : 'text-slate hover:text-charcoal'
@@ -266,7 +266,7 @@ const breadcrumbs = [
                         data-playback-id={item.playbackId || ""}
                         data-aspect-ratio={item.aspectRatio || ""}
                         data-animated-src={item.animatedSrc || ""}
-                        data-finish-type={item.finishType || ""}
+                        data-finish-types={JSON.stringify(item.finishTypes)}
                       >
                         <div class="relative overflow-hidden aspect-[4/3] bg-charcoal-light">
                           <img
@@ -337,7 +337,7 @@ const breadcrumbs = [
                       data-playback-id={item.playbackId || ""}
                       data-aspect-ratio={item.aspectRatio || ""}
                       data-animated-src={item.animatedSrc || ""}
-                      data-finish-type={item.finishType || ""}
+                      data-finish-types={JSON.stringify(item.finishTypes)}
                     >
                       <div class="relative overflow-hidden aspect-[4/3] bg-charcoal-light">
                         <img
@@ -873,7 +873,8 @@ const breadcrumbs = [
           let visibleCount = 0;
 
           items.forEach((item) => {
-            const itemFinish = item.getAttribute("data-finish-type");
+            const finishTypesAttr = item.getAttribute("data-finish-types");
+            const itemFinishes = finishTypesAttr ? JSON.parse(finishTypesAttr) : [];
 
             if (selectedFinish === "all") {
               // Show all items (restore original visibility)
@@ -881,8 +882,8 @@ const breadcrumbs = [
               if (!item.classList.contains("gallery-hidden")) {
                 visibleCount++;
               }
-            } else if (itemFinish === selectedFinish) {
-              // Show matching items
+            } else if (itemFinishes.includes(selectedFinish)) {
+              // Show matching items (if any of the finishes match)
               item.classList.remove("filter-hidden");
               item.classList.remove("hidden", "gallery-hidden");
               visibleCount++;
@@ -921,9 +922,11 @@ const breadcrumbs = [
               // Update counter for filtered view
               const showingSpan = section.querySelector(".showing-count");
               if (showingSpan && sectionCounter) {
-                const totalFiltered = Array.from(items).filter(
-                  (i) => i.getAttribute("data-finish-type") === selectedFinish
-                ).length;
+                const totalFiltered = Array.from(items).filter((i) => {
+                  const attr = i.getAttribute("data-finish-types");
+                  const finishes = attr ? JSON.parse(attr) : [];
+                  return finishes.includes(selectedFinish);
+                }).length;
                 showingSpan.textContent = String(visibleCount);
                 // Update the "of X" part too
                 sectionCounter.innerHTML = `Showing <span class="showing-count">${visibleCount}</span> of ${totalFiltered}`;

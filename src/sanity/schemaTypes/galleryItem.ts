@@ -134,10 +134,11 @@ export default defineType({
         parent?.category !== 'concrete' && parent?.category !== 'landscaping' && parent?.category !== 'fire-features',
     }),
     defineField({
-      name: 'finishType',
-      title: 'Finish Type',
-      type: 'string',
-      description: 'Type of concrete finish (only for Concrete photos)',
+      name: 'finishTypes',
+      title: 'Finish Types',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Select all finish types that apply (only for Concrete photos)',
       options: {
         list: [
           { title: 'Stamped', value: 'stamped' },
@@ -147,7 +148,7 @@ export default defineType({
           { title: 'Smooth/Troweled', value: 'smooth' },
           { title: 'Colored', value: 'colored' },
         ],
-        layout: 'dropdown',
+        layout: 'grid',
       },
       hidden: ({ parent }) => parent?.category !== 'concrete',
     }),

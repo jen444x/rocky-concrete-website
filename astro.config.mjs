@@ -21,7 +21,7 @@ export default defineConfig({
       noExternal: ['sanity', '@sanity/orderable-document-list']
     },
     optimizeDeps: {
-      include: ['@sanity/orderable-document-list > lodash/**', '@sanity/orderable-document-list']
+      include: ['@sanity/orderable-document-list > lodash/**', '@sanity/orderable-document-list', 'void-elements', 'html-parse-stringify']
     }
   },
 
