@@ -802,6 +802,198 @@ const breadcrumbs = [
     }
   });
 
+  // Touch swipe gestures for mobile navigation + drag-to-dismiss
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchCurrentX = 0;
+  let touchCurrentY = 0;
+  let isSwiping = false;
+  let swipeDirection: 'horizontal' | 'vertical' | null = null; // Lock direction once determined
+  const SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
+  const SWIPE_VELOCITY_THRESHOLD = 0.3; // Pixels per millisecond
+  const DISMISS_THRESHOLD = 0.25; // 25% of screen height to dismiss
+  const DISMISS_VELOCITY_THRESHOLD = 0.5; // Fast flick threshold
+  let touchStartTime = 0;
+
+  function handleTouchStart(e: TouchEvent) {
+    if (!isLightboxOpen) return;
+
+    // Only track single finger touches
+    if (e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchCurrentX = touch.clientX;
+    touchCurrentY = touch.clientY;
+    touchStartTime = Date.now();
+    isSwiping = true;
+    swipeDirection = null; // Reset direction lock
+
+    // Remove transition during swipe for responsive feel
+    if (lightboxMedia) {
+      lightboxMedia.style.transition = 'none';
+    }
+    if (lightboxBackdrop) {
+      lightboxBackdrop.style.transition = 'none';
+    }
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (!isLightboxOpen || !isSwiping) return;
+    if (e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    touchCurrentX = touch.clientX;
+    touchCurrentY = touch.clientY;
+
+    const deltaX = touchCurrentX - touchStartX;
+    const deltaY = touchCurrentY - touchStartY;
+
+    // Determine swipe direction if not yet locked (after 10px movement)
+    if (!swipeDirection && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      swipeDirection = Math.abs(deltaY) > Math.abs(deltaX) ? 'vertical' : 'horizontal';
+    }
+
+    // VERTICAL: Drag-to-dismiss (only downward)
+    if (swipeDirection === 'vertical' && deltaY > 0) {
+      const screenHeight = window.innerHeight;
+      const progress = Math.min(deltaY / screenHeight, 1); // 0 to 1
+
+      // Resistance: starts 1:1, increases resistance as you drag further
+      const resistance = 1 - (progress * 0.4);
+      const translateY = deltaY * resistance;
+
+      // Scale: shrinks slightly as you drag (1 → 0.85)
+      const scale = Math.max(0.85, 1 - (progress * 0.15));
+
+      // Backdrop opacity: fades as you drag
+      const backdropOpacity = Math.max(0.3, 1 - progress);
+
+      if (lightboxMedia) {
+        lightboxMedia.style.transform = `translateY(${translateY}px) scale(${scale})`;
+      }
+      if (lightboxBackdrop) {
+        lightboxBackdrop.style.opacity = String(backdropOpacity);
+      }
+    }
+    // HORIZONTAL: Navigate between images
+    else if (swipeDirection === 'horizontal') {
+      if (lightboxMedia && Math.abs(deltaX) > 10) {
+        // Add resistance effect
+        const resistance = 0.4;
+        const translateX = deltaX * resistance;
+        lightboxMedia.style.transform = `translateX(${translateX}px)`;
+
+        // Slight opacity fade based on swipe distance
+        const opacity = Math.max(0.5, 1 - Math.abs(deltaX) / 500);
+        lightboxImage.style.opacity = String(opacity);
+      }
+    }
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    if (!isLightboxOpen || !isSwiping) return;
+    isSwiping = false;
+
+    const deltaX = touchCurrentX - touchStartX;
+    const deltaY = touchCurrentY - touchStartY;
+    const deltaTime = Date.now() - touchStartTime;
+
+    // VERTICAL: Check for dismiss
+    if (swipeDirection === 'vertical' && deltaY > 0) {
+      const screenHeight = window.innerHeight;
+      const progress = deltaY / screenHeight;
+      const velocity = deltaY / deltaTime;
+
+      // Dismiss if dragged past threshold OR fast flick
+      const shouldDismiss = progress > DISMISS_THRESHOLD || velocity > DISMISS_VELOCITY_THRESHOLD;
+
+      if (shouldDismiss) {
+        // Animate out and close
+        if (lightboxMedia) {
+          lightboxMedia.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out';
+          lightboxMedia.style.transform = `translateY(${screenHeight}px) scale(0.8)`;
+          lightboxMedia.style.opacity = '0';
+        }
+        if (lightboxBackdrop) {
+          lightboxBackdrop.style.transition = 'opacity 0.3s ease-out';
+          lightboxBackdrop.style.opacity = '0';
+        }
+
+        // Close after animation
+        setTimeout(() => {
+          // Reset styles before closing
+          if (lightboxMedia) {
+            lightboxMedia.style.transition = '';
+            lightboxMedia.style.transform = '';
+            lightboxMedia.style.opacity = '';
+          }
+          if (lightboxBackdrop) {
+            lightboxBackdrop.style.transition = '';
+            lightboxBackdrop.style.opacity = '';
+          }
+          closeLightbox();
+        }, 300);
+      } else {
+        // Snap back with spring animation
+        if (lightboxMedia) {
+          lightboxMedia.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          lightboxMedia.style.transform = '';
+        }
+        if (lightboxBackdrop) {
+          lightboxBackdrop.style.transition = 'opacity 0.3s ease-out';
+          lightboxBackdrop.style.opacity = '';
+        }
+      }
+      return;
+    }
+
+    // HORIZONTAL: Navigate between images
+    if (swipeDirection === 'horizontal') {
+      const velocity = Math.abs(deltaX) / deltaTime;
+
+      // Reset transforms with smooth transition
+      if (lightboxMedia) {
+        lightboxMedia.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+        lightboxMedia.style.transform = '';
+      }
+      lightboxImage.style.opacity = '';
+
+      // Determine if swipe was significant enough
+      const isSwipe = Math.abs(deltaX) > SWIPE_THRESHOLD || velocity > SWIPE_VELOCITY_THRESHOLD;
+
+      if (isSwipe) {
+        if (deltaX > 0) {
+          // Swiped right → previous image
+          prevImage();
+        } else {
+          // Swiped left → next image
+          nextImage();
+        }
+      }
+      return;
+    }
+
+    // No direction determined - reset everything
+    if (lightboxMedia) {
+      lightboxMedia.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+      lightboxMedia.style.transform = '';
+    }
+    if (lightboxBackdrop) {
+      lightboxBackdrop.style.transition = 'opacity 0.3s ease-out';
+      lightboxBackdrop.style.opacity = '';
+    }
+    lightboxImage.style.opacity = '';
+  }
+
+  // Add touch listeners to the content area
+  if (lightboxContent) {
+    lightboxContent.addEventListener('touchstart', handleTouchStart, { passive: true });
+    lightboxContent.addEventListener('touchmove', handleTouchMove, { passive: true });
+    lightboxContent.addEventListener('touchend', handleTouchEnd, { passive: true });
+  }
+
   // Subcategory dropdown scroll functionality
   const HEADER_OFFSET = 120;
   const subcatScrollBtns = document.querySelectorAll(".subcat-scroll-btn");
