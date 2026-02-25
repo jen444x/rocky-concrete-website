@@ -3,55 +3,63 @@ import { sanityClient, urlFor } from "../../sanity/client";
 import GalleryLayout from "../../layouts/GalleryLayout.astro";
 import CategoryNav from "../../components/CategoryNav.astro";
 
-export const prerender = true;
+// Removed prerender = true so pages are server-rendered (SSR)
+// This allows Sanity content changes to appear without rebuilds
 
-export async function getStaticPaths() {
-  const categories = [
-    {
-      slug: "concrete",
-      name: "Concrete Work",
-      description:
-        "Driveways, walkways, patios, stairs, and professional flatwork",
-    },
-    {
-      slug: "outdoor-kitchens",
-      name: "Outdoor Kitchens",
-      description:
-        "Luxury outdoor kitchen designs with professional countertops and entertainment setups",
-    },
-    {
-      slug: "covered-patios",
-      name: "Covered Patios",
-      description:
-        "Elegant covered patio designs with stone columns and premium finishes",
-    },
-    {
-      slug: "fire-features",
-      name: "Fire Features",
-      description:
-        "Custom fire pits, outdoor fireplaces, and fire feature installations",
-    },
-    {
-      slug: "landscaping",
-      name: "Landscaping",
-      description:
-        "Artificial turf, gardens, water features, and complete landscape design",
-    },
-    {
-      slug: "ironwork",
-      name: "Iron Work",
-      description: "Decorative gates, railings, archways, and custom metalwork",
-    },
-  ];
+// Cache for 1 second, then serve stale while revalidating in background (30 days)
+// Changes appear almost instantly, visitors always get fast cached response
+Astro.response.headers.set(
+  'Cache-Control',
+  'public, s-maxage=1, stale-while-revalidate=2592000'
+);
 
-  return categories.map((category) => ({
-    params: { category: category.slug },
-    props: { categoryInfo: category },
-  }));
-}
+// Valid gallery categories
+const categories = [
+  {
+    slug: "concrete",
+    name: "Concrete Work",
+    description:
+      "Driveways, walkways, patios, stairs, and professional flatwork",
+  },
+  {
+    slug: "outdoor-kitchens",
+    name: "Outdoor Kitchens",
+    description:
+      "Luxury outdoor kitchen designs with professional countertops and entertainment setups",
+  },
+  {
+    slug: "covered-patios",
+    name: "Covered Patios",
+    description:
+      "Elegant covered patio designs with stone columns and premium finishes",
+  },
+  {
+    slug: "fire-features",
+    name: "Fire Features",
+    description:
+      "Custom fire pits, outdoor fireplaces, and fire feature installations",
+  },
+  {
+    slug: "landscaping",
+    name: "Landscaping",
+    description:
+      "Artificial turf, gardens, water features, and complete landscape design",
+  },
+  {
+    slug: "ironwork",
+    name: "Iron Work",
+    description: "Decorative gates, railings, archways, and custom metalwork",
+  },
+];
 
+// Get category from URL and validate it exists
 const { category } = Astro.params;
-const { categoryInfo } = Astro.props;
+const categoryInfo = categories.find(c => c.slug === category);
+
+// Return 404 if category doesn't exist
+if (!categoryInfo) {
+  return new Response('Not Found', { status: 404 });
+}
 
 // Map URL slugs to Sanity category values (ironwork vs iron-work)
 const categorySlugMap: Record<string, string> = {
