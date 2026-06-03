@@ -1,8 +1,20 @@
 import type { APIRoute } from 'astro'
 import { sanityWriteClient } from '../../sanity/client'
+import { AUTH_COOKIE, authToken } from './verify-password'
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
+    // Require a valid login cookie before doing anything. This is the real
+    // gate — the password check in the UI is just convenience on top of this.
+    const uploadPassword = import.meta.env.UPLOAD_PASSWORD
+    const provided = cookies.get(AUTH_COOKIE)?.value
+    if (!uploadPassword || provided !== authToken(uploadPassword)) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Check if write client has token configured
     if (!import.meta.env.SANITY_WRITE_TOKEN) {
       return new Response(
