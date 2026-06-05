@@ -119,7 +119,7 @@ const galleryItems = allGalleryItems.map((item: any, index: number) => {
   } else if (item.image) {
     // PHOTO → Sanity image (same as before)
     src = urlFor(item.image).width(800).height(600).fit("crop").auto('format').url();
-    fullSrc = urlFor(item.image).url();
+    fullSrc = urlFor(item.image).width(2000).auto('format').url();
   }
 
   // Step 3: Generate animated preview URL for videos (hover effect)
