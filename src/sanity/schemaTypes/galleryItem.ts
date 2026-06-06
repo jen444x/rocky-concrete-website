@@ -117,7 +117,6 @@ export default defineType({
           // Concrete subcategories
           { title: 'Walkways & Steps', value: 'walkways-steps' },
           { title: 'Flatwork & Patios', value: 'flatwork-patios' },
-          { title: 'Driveways', value: 'driveways' },
           { title: 'Stone Work', value: 'stone-work' },
           // Fire Features subcategories
           { title: 'Fire Pits', value: 'fire-pits' },

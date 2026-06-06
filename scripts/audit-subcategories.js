@@ -21,7 +21,7 @@ const client = createClient({
 
 // Source of truth — must match src/sanity/schemaTypes/galleryItem.ts
 const VALID_SUBCATEGORIES = {
-  concrete: ['walkways-steps', 'flatwork-patios', 'driveways', 'stone-work'],
+  concrete: ['walkways-steps', 'flatwork-patios', 'stone-work'],
   'fire-features': ['fire-pits', 'fire-pit-tables', 'fireplaces'],
   landscaping: ['water-features', 'turf', 'gardens'],
 };

@@ -41,14 +41,6 @@ const structure = (S: any, context: any) =>
                       }),
                       orderableDocumentListDeskItem({
                         type: 'galleryItem',
-                        id: 'orderable-driveways',
-                        title: 'Driveways',
-                        filter: 'category == "concrete" && subcategory == "driveways"',
-                        S,
-                        context,
-                      }),
-                      orderableDocumentListDeskItem({
-                        type: 'galleryItem',
                         id: 'orderable-stone-work',
                         title: 'Stone Work',
                         filter: 'category == "concrete" && subcategory == "stone-work"',
@@ -210,14 +202,6 @@ const structure = (S: any, context: any) =>
                           S.documentList()
                             .title('Stone Work')
                             .filter('_type == "galleryItem" && category == "concrete" && subcategory == "stone-work"')
-                            .defaultOrdering([{ field: 'orderRank', direction: 'asc' }])
-                        ),
-                      S.listItem()
-                        .title('Driveways')
-                        .child(
-                          S.documentList()
-                            .title('Driveways')
-                            .filter('_type == "galleryItem" && category == "concrete" && subcategory == "driveways"')
                             .defaultOrdering([{ field: 'orderRank', direction: 'asc' }])
                         ),
                     ])
