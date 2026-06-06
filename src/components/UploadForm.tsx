@@ -19,6 +19,11 @@ const SUBCATEGORIES: Record<string, { value: string; label: string }[]> = {
     { value: "driveways", label: "Driveways" },
     { value: "stone-work", label: "Stone Work" },
   ],
+  "fire-features": [
+    { value: "fire-pits", label: "Fire Pits" },
+    { value: "fire-pit-tables", label: "Fire Pit Tables" },
+    { value: "fireplaces", label: "Fireplaces" },
+  ],
   landscaping: [
     { value: "turf", label: "Artificial Turf" },
     { value: "gardens", label: "Gardens" },
@@ -39,8 +44,9 @@ export default function UploadForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const hasSubcategories =
-    category === "concrete" || category === "landscaping";
+  // Show the subcategory dropdown for any category that has subcategories
+  // defined above, so this can't fall out of sync when categories change.
+  const hasSubcategories = (SUBCATEGORIES[category]?.length ?? 0) > 0;
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
