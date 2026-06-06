@@ -102,23 +102,33 @@ const galleryItems = allGalleryItems.map((item: any, index: number) => {
 
   // Step 2: Get the thumbnail URL (different source for each type)
   let src = "";
+  let srcset = "";
   let fullSrc = "";
+
+  // Generate a few widths so each device downloads only what it needs.
+  // All keep the same 4:3 crop as the 800px default, so framing is identical.
+  const responsiveWidths = [400, 800, 1200];
 
   if (isVideo && playbackId) {
     // VIDEO → Mux thumbnail
     const timeParam = typeof thumbTime === "number" ? `time=${thumbTime}` : "";
+    // smartcrop only when focus is auto; otherwise CSS positions the crop
+    const fitParam = thumbFocus === "auto" ? "&fit_mode=smartcrop" : "";
 
-    if (thumbFocus === "auto") {
-      // Use Mux smartcrop (default behavior) - WebP for best quality/size balance
-      src = `https://image.mux.com/${playbackId}/thumbnail.webp?width=800&height=600&fit_mode=smartcrop${timeParam ? `&${timeParam}` : ""}`;
-    } else {
-      // Manual focus: get full thumbnail, CSS will handle the crop position
-      src = `https://image.mux.com/${playbackId}/thumbnail.webp?width=800&height=600${timeParam ? `&${timeParam}` : ""}`;
-    }
+    src = `https://image.mux.com/${playbackId}/thumbnail.webp?width=800&height=600${fitParam}${timeParam ? `&${timeParam}` : ""}`;
+    srcset = responsiveWidths
+      .map((w) => {
+        const h = Math.round(w * 0.75);
+        return `https://image.mux.com/${playbackId}/thumbnail.webp?width=${w}&height=${h}${fitParam}${timeParam ? `&${timeParam}` : ""} ${w}w`;
+      })
+      .join(", ");
     fullSrc = `https://image.mux.com/${playbackId}/thumbnail.webp`;
   } else if (item.image) {
-    // PHOTO → Sanity image (same as before)
+    // PHOTO → Sanity image
     src = urlFor(item.image).width(800).height(600).fit("crop").auto('format').url();
+    srcset = responsiveWidths
+      .map((w) => `${urlFor(item.image).width(w).height(Math.round(w * 0.75)).fit("crop").auto('format').url()} ${w}w`)
+      .join(", ");
     fullSrc = urlFor(item.image).width(2000).auto('format').url();
   }
 
@@ -134,6 +144,7 @@ const galleryItems = allGalleryItems.map((item: any, index: number) => {
   // Step 4: Return the clean object
   return {
     src,
+    srcset,
     fullSrc,
     animatedSrc,
     alt: item.alt,
@@ -237,6 +248,8 @@ const breadcrumbs = [
                         <div class="relative overflow-hidden aspect-[4/3] bg-charcoal-light">
                           <img
                             src={item.src}
+                            srcset={item.srcset}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1400px) 33vw, 460px"
                             alt={item.alt}
                             class="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-95"
                             style={item.thumbFocus !== "auto" ? `object-position: ${item.thumbFocus}` : undefined}
@@ -307,6 +320,8 @@ const breadcrumbs = [
                       <div class="relative overflow-hidden aspect-[4/3] bg-charcoal-light">
                         <img
                           src={item.src}
+                          srcset={item.srcset}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1400px) 33vw, 460px"
                           alt={item.alt}
                           class="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-95"
                           style={item.thumbFocus !== "auto" ? `object-position: ${item.thumbFocus}` : undefined}
