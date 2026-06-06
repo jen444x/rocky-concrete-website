@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { Font } from 'astro:assets';
 
 interface Props {
   title: string;
@@ -38,14 +39,13 @@ const isHomePage = Astro.url.pathname === '/';
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content="https://rockyconcreteinc.com/img/hero/hero-img.jpg" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://cdn.sanity.io" />
-    <!-- Professional Fonts: Bebas Neue + Inter -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Self-hosted fonts (Astro Fonts API): non-render-blocking, with auto -->
+    <!-- metric-matched fallbacks so text doesn't flash/shift on swap. -->
+    <!-- Only preload the weight-400 files needed for first paint (body + hero -->
+    <!-- heading); other weights load on demand via @font-face. -->
+    <Font cssVariable="--font-inter" preload={[{ weight: 400, style: 'normal' }]} />
+    <Font cssVariable="--font-bebas" preload />
 
     <link rel="icon" href="/img/favicon-64px.png" />
     <link

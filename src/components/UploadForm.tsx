@@ -174,13 +174,13 @@ export default function UploadForm() {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">✓</div>
-        <h2 className="font-['Bebas_Neue'] text-3xl text-white mb-2">
+        <h2 className="font-heading text-3xl text-white mb-2">
           ¡Listo!
         </h2>
         <p className="text-slate-light mb-8">La foto se agregó a la galería.</p>
         <button
           onClick={resetForm}
-          className="bg-bronze hover:bg-bronze-dark text-white font-['Bebas_Neue'] text-lg tracking-wider py-4 px-8 transition-colors"
+          className="bg-bronze hover:bg-bronze-dark text-white font-heading text-lg tracking-wider py-4 px-8 transition-colors"
         >
           Subir Otra
         </button>
@@ -192,7 +192,7 @@ export default function UploadForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Image Upload */}
       <div>
-        <label className="block font-['Bebas_Neue'] text-lg tracking-wide text-white mb-2">
+        <label className="block font-heading text-lg tracking-wide text-white mb-2">
           Foto <span className="text-bronze">*</span>
         </label>
 
@@ -252,7 +252,7 @@ export default function UploadForm() {
       <div>
         <label
           htmlFor="title"
-          className="block font-['Bebas_Neue'] text-lg tracking-wide text-white mb-2"
+          className="block font-heading text-lg tracking-wide text-white mb-2"
         >
           Título <span className="text-bronze">*</span>
         </label>
@@ -272,7 +272,7 @@ export default function UploadForm() {
       <div>
         <label
           htmlFor="category"
-          className="block font-['Bebas_Neue'] text-lg tracking-wide text-white mb-2"
+          className="block font-heading text-lg tracking-wide text-white mb-2"
         >
           Categoría <span className="text-bronze">*</span>
         </label>
@@ -302,7 +302,7 @@ export default function UploadForm() {
         <div>
           <label
             htmlFor="subcategory"
-            className="block font-['Bebas_Neue'] text-lg tracking-wide text-white mb-2"
+            className="block font-heading text-lg tracking-wide text-white mb-2"
           >
             Subcategoría
           </label>
@@ -332,7 +332,7 @@ export default function UploadForm() {
       <div>
         <label
           htmlFor="notes"
-          className="block font-['Bebas_Neue'] text-lg tracking-wide text-white mb-2"
+          className="block font-heading text-lg tracking-wide text-white mb-2"
         >
           Notas para Jennifer
         </label>
@@ -361,7 +361,7 @@ export default function UploadForm() {
       <button
         type="submit"
         disabled={status === "uploading" || status === "converting"}
-        className="w-full bg-bronze hover:bg-bronze-dark disabled:bg-slate disabled:cursor-not-allowed text-white font-['Bebas_Neue'] text-xl tracking-wider py-5 rounded-lg transition-colors"
+        className="w-full bg-bronze hover:bg-bronze-dark disabled:bg-slate disabled:cursor-not-allowed text-white font-heading text-xl tracking-wider py-5 rounded-lg transition-colors"
       >
         {status === "uploading" || status === "converting" ? (
           <span className="flex items-center justify-center gap-2">

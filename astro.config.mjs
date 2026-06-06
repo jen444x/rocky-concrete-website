@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
 
 import tailwindcss from '@tailwindcss/vite';
 
@@ -14,6 +14,28 @@ export default defineConfig({
   site: 'https://rockyconcreteinc.com',
   output: 'server',
   adapter: netlify(),
+
+  // Self-host Inter + Bebas Neue from Google: downloaded at build, served from our
+  // own domain, preloaded, with auto metric-matched fallbacks. Replaces the
+  // render-blocking Google Fonts <link> and removes the FOUT/flash.
+  experimental: {
+    fonts: [
+      {
+        provider: fontProviders.google(),
+        name: 'Inter',
+        cssVariable: '--font-inter',
+        weights: [300, 400, 500, 600, 700],
+        styles: ['normal'], // site uses no italics — don't download them
+      },
+      {
+        provider: fontProviders.google(),
+        name: 'Bebas Neue',
+        cssVariable: '--font-bebas',
+        weights: [400],
+        styles: ['normal'],
+      },
+    ],
+  },
 
   vite: {
     plugins: [tailwindcss()],
