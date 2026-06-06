@@ -14,9 +14,10 @@ const CATEGORIES = [
 
 const SUBCATEGORIES: Record<string, { value: string; label: string }[]> = {
   concrete: [
-    { value: "walkways", label: "Walkways" },
-    { value: "steps-stairs", label: "Steps & Stairs" },
+    { value: "walkways-steps", label: "Walkways & Steps" },
     { value: "flatwork-patios", label: "Flatwork & Patios" },
+    { value: "driveways", label: "Driveways" },
+    { value: "stone-work", label: "Stone Work" },
   ],
   landscaping: [
     { value: "turf", label: "Artificial Turf" },
