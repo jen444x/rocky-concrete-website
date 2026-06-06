@@ -16,14 +16,4 @@ dist/
 .netlify
 # Backup/duplicate files
 *.backup
-*\ 2.ts
-*\ 2
-1. Was the bot broken, or were there just no jobs?
-At the start, both looked the same. I wasn't going to trust the bot to accept jobs on its own until I could see what it was seeing. So I added a check for the "no jobs available" message on the page, made it save HTML and screenshots whenever something went wrong, and kept my sister checking the portal herself as a backup.
-
-2. Headless Chrome got filtered out of the listings.
-Jobs weren't showing up at first and I didn't know why. Turned out headless Chrome looks like a bot out of the box: the navigator.webdriver flag is set, automation switches are on by default, and the request timing is too regular. I had to fix all three (disable the flag, strip the switches, randomize the waits) before the bot could see jobs at all.
-
-3. Memory was what kept breaking the bot.
-1GB of RAM, one always-on Chrome process, no headroom. So I had to keep every part of it lean: swapped Chromium for Chrome (more stable under load), destroyed and rebuilt Chrome every 10 cycles so memory couldn't creep, wiped its profile data each time, and deleted debug HTML and screenshots as soon as they were sent. A bigger droplet wouldn't have stopped the leak, just delayed it.
 
