@@ -6,7 +6,6 @@ const CATEGORIES = [
   { value: "concrete", label: "Concrete Work" },
   { value: "outdoor-kitchens", label: "Outdoor Kitchens" },
   { value: "covered-patios", label: "Covered Patios" },
-  { value: "pools-spas", label: "Pools & Spas" },
   { value: "fire-features", label: "Fire Features" },
   { value: "landscaping", label: "Landscaping" },
   { value: "iron-work", label: "Iron Work" },
